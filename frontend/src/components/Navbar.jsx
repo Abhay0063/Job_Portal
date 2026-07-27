@@ -27,6 +27,9 @@ export default function Navbar() {
             <Link className="nav-link text-white-50" to="/my-profile">My Profile</Link>
           </>
         )}
+        {user?.role === 'admin' && (
+          <Link className="nav-link text-white-50" to="/admin-dashboard">Admin Dashboard</Link>
+        )}
         {user ? (
           <>
             <span className="text-white-50 small">{user.name} · {user.role}</span>

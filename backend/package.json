@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "sync": "node sync.js"
+    "sync": "node sync.js",
+    "seed:admin": "node seedAdmin.js"
   },
   "dependencies": {
     "express": "^4.19.2",
