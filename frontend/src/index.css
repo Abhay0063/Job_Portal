@@ -1,0 +1,148 @@
+/* ---------------------------------------------------------------
+   Job Portal design tokens.
+   Reskins Bootstrap 5.3 by overriding its own CSS variables, so we
+   keep Bootstrap's grid/utilities but with an intentional palette
+   instead of the default blue.
+   --------------------------------------------------------------- */
+:root {
+  --jp-navy: #1f3a5f;
+  --jp-navy-dark: #16293f;
+  --jp-amber: #e8a33d;
+  --jp-bg: #f7f7f5;
+  --jp-surface: #ffffff;
+  --jp-text: #1c1c1c;
+  --jp-text-muted: #6b7280;
+  --jp-border: #e3e1db;
+
+  /* Job type accent colors — the one recurring visual thread across the app */
+  --jp-type-fulltime: #1f3a5f;
+  --jp-type-parttime: #e8a33d;
+  --jp-type-internship: #2a9d8f;
+  --jp-type-contract: #8b5cf6;
+
+  --bs-primary: var(--jp-navy);
+  --bs-primary-rgb: 31, 58, 95;
+  --bs-body-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --bs-body-bg: var(--jp-bg);
+  --bs-body-color: var(--jp-text);
+  --bs-border-radius: 0.6rem;
+  --bs-border-radius-sm: 0.4rem;
+  --bs-border-radius-lg: 0.85rem;
+  --bs-link-color: var(--jp-navy);
+  --bs-link-hover-color: var(--jp-navy-dark);
+}
+
+body {
+  margin: 0;
+  font-family: var(--bs-body-font-family);
+  background: var(--jp-bg);
+  color: var(--jp-text);
+}
+
+.btn-primary {
+  background-color: var(--jp-navy);
+  border-color: var(--jp-navy);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--jp-navy-dark);
+  border-color: var(--jp-navy-dark);
+}
+.btn-outline-primary {
+  color: var(--jp-navy);
+  border-color: var(--jp-navy);
+}
+.btn-outline-primary:hover {
+  background-color: var(--jp-navy);
+  border-color: var(--jp-navy);
+}
+
+.card {
+  border: 1px solid var(--jp-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 14px rgba(31, 58, 95, 0.08);
+}
+
+/* Job-type accent border — the signature element, used on job cards and
+   anywhere a job's type needs to be recognizable at a glance. */
+.job-type-accent {
+  border-left: 4px solid var(--jp-border);
+}
+.job-type-accent[data-type='full-time'] { border-left-color: var(--jp-type-fulltime); }
+.job-type-accent[data-type='part-time'] { border-left-color: var(--jp-type-parttime); }
+.job-type-accent[data-type='internship'] { border-left-color: var(--jp-type-internship); }
+.job-type-accent[data-type='contract'] { border-left-color: var(--jp-type-contract); }
+
+/* Brand wordmark in the navbar */
+.brand-mark {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.brand-mark .brand-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--jp-amber);
+  display: inline-block;
+}
+
+/* Skeleton loading placeholders, replacing plain "Loading..." text */
+.skeleton {
+  background: linear-gradient(90deg, #eceae5 25%, #f5f4f0 37%, #eceae5 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: var(--bs-border-radius-sm);
+}
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* Empty state block */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--jp-text-muted);
+}
+.empty-state .empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.6;
+}
+
+/* Toast notifications */
+.toast-stack {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 320px;
+}
+.toast-item {
+  background: var(--jp-surface);
+  border-left: 4px solid var(--jp-navy);
+  border-radius: var(--bs-border-radius-sm);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  animation: toast-in 0.2s ease-out;
+}
+.toast-item.success { border-left-color: #2a9d8f; }
+.toast-item.error { border-left-color: #d94f4f; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton, .toast-item { animation: none; }
+}
