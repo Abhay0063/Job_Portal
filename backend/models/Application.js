@@ -12,7 +12,7 @@ const Application = sequelize.define('Application', {
     allowNull: true,
   },
   status: {
-    type: DataTypes.ENUM('applied', 'shortlisted', 'rejected', 'hired'),
+    type: DataTypes.ENUM('applied', 'under_review', 'shortlisted', 'interview_scheduled', 'selected', 'rejected'),
     allowNull: false,
     defaultValue: 'applied',
   },

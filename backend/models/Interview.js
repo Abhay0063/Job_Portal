@@ -21,7 +21,7 @@ const Interview = sequelize.define('Interview', {
     allowNull: true,
   },
   status: {
-    type: DataTypes.ENUM('scheduled', 'completed', 'cancelled'),
+    type: DataTypes.ENUM('scheduled', 'completed', 'passed', 'failed'),
     allowNull: false,
     defaultValue: 'scheduled',
   },

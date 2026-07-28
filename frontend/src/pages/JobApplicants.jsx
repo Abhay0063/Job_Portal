@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
-const statusOptions = ['applied', 'shortlisted', 'rejected', 'hired'];
+const statusOptions = [
+  { value: 'applied', label: 'Applied' },
+  { value: 'under_review', label: 'Under Review' },
+  { value: 'shortlisted', label: 'Shortlisted' },
+  { value: 'interview_scheduled', label: 'Interview Scheduled' },
+  { value: 'selected', label: 'Selected' },
+  { value: 'rejected', label: 'Rejected' },
+];
 const statusColor = {
   applied: 'bg-secondary',
-  shortlisted: 'bg-info',
+  under_review: 'bg-info',
+  shortlisted: 'bg-primary',
+  interview_scheduled: 'bg-warning text-dark',
+  selected: 'bg-success',
   rejected: 'bg-danger',
-  hired: 'bg-success',
+};
+
+const interviewStatusOptions = ['scheduled', 'completed', 'passed', 'failed'];
+const interviewStatusColor = {
+  scheduled: 'bg-secondary',
+  completed: 'bg-info',
+  passed: 'bg-success',
+  failed: 'bg-danger',
 };
 
 export default function JobApplicants() {
@@ -16,8 +34,15 @@ export default function JobApplicants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
-  const [scheduling, setScheduling] = useState(null); // application id currently being scheduled
+  const { showToast } = useToast();
+
+  // Scheduling a new interview
+  const [scheduling, setScheduling] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({ scheduledAt: '', mode: 'online', meetingLink: '' });
+
+  // Editing an existing interview's status/notes
+  const [editingInterview, setEditingInterview] = useState(null);
+  const [editForm, setEditForm] = useState({ status: 'scheduled', feedback: '' });
 
   const load = () => {
     setLoading(true);
@@ -35,7 +60,7 @@ export default function JobApplicants() {
       await api.put(`/applications/${appId}/status`, { status: newStatus });
       setApplications((prev) => prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)));
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not update status');
+      showToast(err.response?.data?.message || 'Could not update status', 'error');
     } finally {
       setUpdatingId(null);
     }
@@ -47,7 +72,6 @@ export default function JobApplicants() {
   };
 
   const submitSchedule = async (appId) => {
-    setError('');
     try {
       const { data } = await api.post('/interviews', {
         applicationId: appId,
@@ -55,12 +79,30 @@ export default function JobApplicants() {
         mode: scheduleForm.mode,
         meetingLink: scheduleForm.meetingLink,
       });
-      // Update the actual application record with the real Interview from the server,
-      // instead of a local flag that would forget itself on refresh.
-      setApplications((prev) => prev.map((a) => (a.id === appId ? { ...a, Interview: data.interview } : a)));
+      // Scheduling also auto-bumps the application status server-side — reflect both locally
+      setApplications((prev) => prev.map((a) => (
+        a.id === appId ? { ...a, Interview: data.interview, status: 'interview_scheduled' } : a
+      )));
       setScheduling(null);
+      showToast('Interview scheduled.', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not schedule interview');
+      showToast(err.response?.data?.message || 'Could not schedule interview', 'error');
+    }
+  };
+
+  const openEditInterview = (interview) => {
+    setEditingInterview(interview.id);
+    setEditForm({ status: interview.status, feedback: interview.feedback || '' });
+  };
+
+  const submitEditInterview = async (appId, interviewId) => {
+    try {
+      const { data } = await api.put(`/interviews/${interviewId}`, editForm);
+      setApplications((prev) => prev.map((a) => (a.id === appId ? { ...a, Interview: data.interview } : a)));
+      setEditingInterview(null);
+      showToast('Interview updated.', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not update interview', 'error');
     }
   };
 
@@ -96,7 +138,7 @@ export default function JobApplicants() {
               <td>{app.Candidate?.User?.name}</td>
               <td>{app.Candidate?.User?.email}</td>
               <td>{app.Candidate?.skills || '—'}</td>
-              <td style={{ maxWidth: 250 }}>{app.coverLetter || '—'}</td>
+              <td style={{ maxWidth: 220 }}>{app.coverLetter || '—'}</td>
               <td>
                 <select
                   className={`form-select form-select-sm text-white ${statusColor[app.status]}`}
@@ -104,14 +146,45 @@ export default function JobApplicants() {
                   disabled={updatingId === app.id}
                   onChange={(e) => handleStatusChange(app.id, e.target.value)}
                 >
-                  {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {statusOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </td>
-              <td style={{ minWidth: 220 }}>
+              <td style={{ minWidth: 240 }}>
                 {app.Interview ? (
-                  <span className="badge bg-success">
-                    Scheduled: {new Date(app.Interview.scheduledAt).toLocaleString()}
-                  </span>
+                  editingInterview === app.Interview.id ? (
+                    <div className="d-flex flex-column gap-1">
+                      <label className="form-label mb-0 small text-muted">Status</label>
+                      <select
+                        className="form-select form-select-sm"
+                        value={editForm.status}
+                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                      >
+                        {interviewStatusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <label className="form-label mb-0 small text-muted">Notes</label>
+                      <textarea
+                        className="form-control form-control-sm"
+                        rows={2}
+                        value={editForm.feedback}
+                        onChange={(e) => setEditForm({ ...editForm, feedback: e.target.value })}
+                      />
+                      <div className="d-flex gap-1 mt-1">
+                        <button className="btn btn-sm btn-success" onClick={() => submitEditInterview(app.id, app.Interview.id)}>Save</button>
+                        <button className="btn btn-sm btn-outline-secondary" onClick={() => setEditingInterview(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className={`badge ${interviewStatusColor[app.Interview.status]}`}>
+                        {app.Interview.status}
+                      </span>
+                      <div className="small text-muted mt-1">{new Date(app.Interview.scheduledAt).toLocaleString()}</div>
+                      {app.Interview.feedback && <div className="small mt-1">📝 {app.Interview.feedback}</div>}
+                      <button className="btn btn-sm btn-link p-0 mt-1" onClick={() => openEditInterview(app.Interview)}>
+                        Update status / notes
+                      </button>
+                    </div>
+                  )
                 ) : scheduling === app.id ? (
                   <div className="d-flex flex-column gap-1">
                     <label className="form-label mb-0 small text-muted">Date &amp; time</label>

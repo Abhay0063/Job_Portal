@@ -27,6 +27,13 @@ const scheduleInterview = async (req, res) => {
     meetingLink,
   });
 
+  // Scheduling an interview is a workflow event: bump the application forward
+  // automatically so the pipeline stays consistent, rather than requiring the
+  // recruiter to remember to update two things separately.
+  if (!['selected', 'rejected'].includes(application.status)) {
+    await application.update({ status: 'interview_scheduled' });
+  }
+
   return res.status(201).json({ interview });
 };
 
@@ -47,9 +54,14 @@ const getMyInterviews = async (req, res) => {
   return res.json({ interviews });
 };
 
-// PUT /api/interviews/:id (recruiter, owner only) — reschedule, mark completed/cancelled, add feedback
+// PUT /api/interviews/:id (recruiter, owner only) — reschedule, mark completed/passed/failed, add notes
 const updateInterview = async (req, res) => {
   const { scheduledAt, mode, meetingLink, status, feedback } = req.body;
+
+  const validStatuses = ['scheduled', 'completed', 'passed', 'failed'];
+  if (status !== undefined && !validStatuses.includes(status)) {
+    return res.status(400).json({ message: `status must be one of: ${validStatuses.join(', ')}` });
+  }
 
   const interview = await Interview.findByPk(req.params.id, {
     include: [{ model: Application, include: [Job] }],

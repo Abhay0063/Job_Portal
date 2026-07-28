@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
+const statusLabel = {
+  applied: 'Applied',
+  under_review: 'Under Review',
+  shortlisted: 'Shortlisted',
+  interview_scheduled: 'Interview Scheduled',
+  selected: 'Selected',
+  rejected: 'Rejected',
+};
 const statusColor = {
   applied: 'bg-secondary',
-  shortlisted: 'bg-info',
+  under_review: 'bg-info',
+  shortlisted: 'bg-primary',
+  interview_scheduled: 'bg-warning text-dark',
+  selected: 'bg-success',
   rejected: 'bg-danger',
-  hired: 'bg-success',
 };
 
 export default function MyApplications() {
@@ -50,13 +60,16 @@ export default function MyApplications() {
               <tr key={app.id}>
                 <td>{app.Job?.title}</td>
                 <td>{app.Job?.location}</td>
-                <td><span className={`badge ${statusColor[app.status] || 'bg-secondary'}`}>{app.status}</span></td>
+                <td><span className={`badge ${statusColor[app.status] || 'bg-secondary'}`}>{statusLabel[app.status] || app.status}</span></td>
                 <td>{new Date(app.appliedAt).toLocaleDateString()}</td>
                 <td>
                   {interview ? (
-                    <span className="text-success">
-                      {new Date(interview.scheduledAt).toLocaleString()} ({interview.mode})
-                    </span>
+                    <div>
+                      <div className="text-success small">
+                        {new Date(interview.scheduledAt).toLocaleString()} ({interview.mode})
+                      </div>
+                      <span className="badge bg-light text-dark border">{interview.status}</span>
+                    </div>
                   ) : (
                     <span className="text-muted">Not scheduled</span>
                   )}
