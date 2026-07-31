@@ -14,13 +14,36 @@ export default function JobDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     api.get(`/jobs/${id}`)
       .then(({ data }) => setJob(data.job))
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
+
+    if (user?.role === 'candidate') {
+      api.get('/candidates/me/saved-jobs')
+        .then(({ data }) => setSaved(data.savedJobs.some((s) => s.jobId === Number(id))))
+        .catch(() => {});
+    }
   }, [id]);
+
+  const toggleSave = async () => {
+    try {
+      if (saved) {
+        await api.delete(`/candidates/me/saved-jobs/${id}`);
+        setSaved(false);
+        showToast('Removed from saved jobs.', 'success');
+      } else {
+        await api.post('/candidates/me/saved-jobs', { jobId: Number(id) });
+        setSaved(true);
+        showToast('Job saved.', 'success');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not update saved jobs', 'error');
+    }
+  };
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -65,11 +88,20 @@ export default function JobDetail() {
           <h3 className="mb-1">{job.title}</h3>
           <h6 className="text-muted">{job.Recruiter?.companyName} · {job.location}</h6>
         </div>
-        {isClosed && <span className="badge bg-secondary">Closed</span>}
+        <div className="d-flex align-items-center gap-2">
+          {isClosed && <span className="badge bg-secondary">Closed</span>}
+          {user?.role === 'candidate' && (
+            <button className="btn btn-sm btn-outline-secondary" onClick={toggleSave}>
+              {saved ? '❤️ Saved' : '🤍 Save'}
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="mt-3">{job.description}</p>
       <p><strong>Type:</strong> {job.jobType}</p>
+      {job.skillsRequired && <p><strong>Skills Required:</strong> {job.skillsRequired}</p>}
+      {job.experienceRequired && <p><strong>Experience Required:</strong> {job.experienceRequired}</p>}
       {(job.salaryMin || job.salaryMax) && (
         <p><strong>Salary:</strong> {job.salaryMin ?? '?'} – {job.salaryMax ?? '?'}</p>
       )}

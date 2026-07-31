@@ -37,6 +37,14 @@ const Job = sequelize.define('Job', {
     allowNull: false,
     defaultValue: 'open',
   },
+  skillsRequired: {
+    type: DataTypes.STRING, // comma-separated, same convention as Candidate.skills
+    allowNull: true,
+  },
+  experienceRequired: {
+    type: DataTypes.STRING, // free text, e.g. "2-4 years" — deliberately not an integer since real postings phrase this loosely
+    allowNull: true,
+  },
 }, {
   tableName: 'jobs',
 });

@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 export default function PostJob() {
   const [form, setForm] = useState({
     title: '', description: '', location: '', jobType: 'full-time', salaryMin: '', salaryMax: '',
+    skillsRequired: '', experienceRequired: '',
   });
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -53,6 +54,47 @@ export default function PostJob() {
             <option value="internship">Internship</option>
             <option value="contract">Contract</option>
           </select>
+        </div>
+        <div className="row mb-3">
+          <div className="col">
+            <label className="form-label">Min Salary (optional)</label>
+            <input
+              type="number"
+              className="form-control"
+              placeholder="e.g. 30000"
+              value={form.salaryMin}
+              onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
+            />
+          </div>
+          <div className="col">
+            <label className="form-label">Max Salary (optional)</label>
+            <input
+              type="number"
+              className="form-control"
+              placeholder="e.g. 50000"
+              value={form.salaryMax}
+              onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Skills Required</label>
+          <input
+            className="form-control"
+            placeholder="e.g. React, Node.js, SQL"
+            value={form.skillsRequired}
+            onChange={(e) => setForm({ ...form, skillsRequired: e.target.value })}
+          />
+          <div className="form-text">Comma-separated list.</div>
+        </div>
+        <div className="mb-3">
+          <label className="form-label">Experience Required</label>
+          <input
+            className="form-control"
+            placeholder="e.g. 2-4 years"
+            value={form.experienceRequired}
+            onChange={(e) => setForm({ ...form, experienceRequired: e.target.value })}
+          />
         </div>
         <button className="btn btn-primary w-100" type="submit" disabled={submitting}>
           {submitting ? 'Posting...' : 'Post Job'}

@@ -5,6 +5,7 @@ const Candidate = require('./Candidate');
 const Job = require('./Job');
 const Application = require('./Application');
 const Interview = require('./Interview');
+const SavedJob = require('./SavedJob');
 
 // --- User <-> Recruiter (1:1) ---
 User.hasOne(Recruiter, { foreignKey: 'userId', onDelete: 'CASCADE' });
@@ -30,6 +31,12 @@ Application.belongsTo(Candidate, { foreignKey: 'candidateId' });
 Application.hasOne(Interview, { foreignKey: 'applicationId', onDelete: 'CASCADE' });
 Interview.belongsTo(Application, { foreignKey: 'applicationId' });
 
+// --- Candidate <-> Job, many:many via SavedJob (bookmarking) ---
+Candidate.hasMany(SavedJob, { foreignKey: 'candidateId', onDelete: 'CASCADE' });
+SavedJob.belongsTo(Candidate, { foreignKey: 'candidateId' });
+Job.hasMany(SavedJob, { foreignKey: 'jobId', onDelete: 'CASCADE' });
+SavedJob.belongsTo(Job, { foreignKey: 'jobId' });
+
 module.exports = {
   sequelize,
   User,
@@ -38,4 +45,5 @@ module.exports = {
   Job,
   Application,
   Interview,
+  SavedJob,
 };

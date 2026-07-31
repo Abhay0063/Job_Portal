@@ -24,6 +24,7 @@ export default function Navbar() {
         {user?.role === 'candidate' && (
           <>
             <Link className="nav-link text-white-50" to="/my-applications">My Applications</Link>
+            <Link className="nav-link text-white-50" to="/saved-jobs">Saved Jobs</Link>
             <Link className="nav-link text-white-50" to="/my-profile">My Profile</Link>
           </>
         )}

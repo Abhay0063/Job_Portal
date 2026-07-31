@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { Candidate, User } = require('../models');
+const { Candidate, User, SavedJob, Job, Recruiter } = require('../models');
 
 // GET /api/candidates/me (candidate only)
 const getMyProfile = async (req, res) => {
@@ -53,4 +53,47 @@ const uploadResumeFile = async (req, res) => {
   return res.json({ resumeUrl });
 };
 
-module.exports = { getMyProfile, updateMyProfile, uploadResumeFile };
+// POST /api/candidates/me/saved-jobs (candidate only)
+const saveJob = async (req, res) => {
+  const { jobId } = req.body;
+  if (!jobId) return res.status(400).json({ message: 'jobId is required' });
+
+  const candidate = await Candidate.findOne({ where: { userId: req.user.id } });
+  if (!candidate) return res.status(403).json({ message: 'No candidate profile found' });
+
+  const job = await Job.findByPk(jobId);
+  if (!job) return res.status(404).json({ message: 'Job not found' });
+
+  const existing = await SavedJob.findOne({ where: { candidateId: candidate.id, jobId } });
+  if (existing) return res.status(409).json({ message: 'Job already saved' });
+
+  const saved = await SavedJob.create({ candidateId: candidate.id, jobId });
+  return res.status(201).json({ saved });
+};
+
+// DELETE /api/candidates/me/saved-jobs/:jobId (candidate only)
+const unsaveJob = async (req, res) => {
+  const candidate = await Candidate.findOne({ where: { userId: req.user.id } });
+  if (!candidate) return res.status(403).json({ message: 'No candidate profile found' });
+
+  const deleted = await SavedJob.destroy({ where: { candidateId: candidate.id, jobId: req.params.jobId } });
+  if (!deleted) return res.status(404).json({ message: 'This job was not saved' });
+
+  return res.json({ message: 'Removed from saved jobs' });
+};
+
+// GET /api/candidates/me/saved-jobs (candidate only)
+const getSavedJobs = async (req, res) => {
+  const candidate = await Candidate.findOne({ where: { userId: req.user.id } });
+  if (!candidate) return res.status(403).json({ message: 'No candidate profile found' });
+
+  const saved = await SavedJob.findAll({
+    where: { candidateId: candidate.id },
+    include: [{ model: Job, include: [{ model: Recruiter, attributes: ['companyName'] }] }],
+    order: [['createdAt', 'DESC']],
+  });
+
+  return res.json({ savedJobs: saved });
+};
+
+module.exports = { getMyProfile, updateMyProfile, uploadResumeFile, saveJob, unsaveJob, getSavedJobs };

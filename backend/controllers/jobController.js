@@ -12,7 +12,7 @@ const toNullableInt = (value) => {
 // POST /api/jobs (recruiter only)
 const createJob = async (req, res) => {
   try {
-    const { title, description, location, jobType, salaryMin, salaryMax } = req.body;
+    const { title, description, location, jobType, salaryMin, salaryMax, skillsRequired, experienceRequired } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({ message: 'title and description are required' });
@@ -30,6 +30,8 @@ const createJob = async (req, res) => {
       jobType,
       salaryMin: toNullableInt(salaryMin),
       salaryMax: toNullableInt(salaryMax),
+      skillsRequired,
+      experienceRequired,
       recruiterId: recruiter.id,
     });
 
@@ -87,9 +89,9 @@ const updateJob = async (req, res) => {
     return res.status(403).json({ message: 'You do not own this job posting' });
   }
 
-  const { title, description, location, jobType, salaryMin, salaryMax, status } = req.body;
+  const { title, description, location, jobType, salaryMin, salaryMax, status, skillsRequired, experienceRequired } = req.body;
   await job.update({
-    title, description, location, jobType, status,
+    title, description, location, jobType, status, skillsRequired, experienceRequired,
     salaryMin: toNullableInt(salaryMin),
     salaryMax: toNullableInt(salaryMax),
   });
