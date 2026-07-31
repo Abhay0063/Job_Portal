@@ -32,6 +32,49 @@
   --bs-link-hover-color: var(--jp-navy-dark);
 }
 
+/* Dark theme — toggled via data-theme="dark" on <html>, not a separate stylesheet,
+   so every component that already uses the --jp-* / --bs-* variables gets it for free. */
+[data-theme='dark'] {
+  --jp-bg: #14181f;
+  --jp-surface: #1d232d;
+  --jp-text: #e8e8e6;
+  --jp-text-muted: #9aa1ac;
+  --jp-border: #2c333e;
+
+  --bs-body-bg: var(--jp-bg);
+  --bs-body-color: var(--jp-text);
+  --bs-link-color: #6ea3e0;
+  --bs-link-hover-color: #8fb8e8;
+}
+[data-theme='dark'] .card {
+  background-color: var(--jp-surface);
+  border-color: var(--jp-border);
+  color: var(--jp-text);
+}
+[data-theme='dark'] .table {
+  --bs-table-bg: var(--jp-surface);
+  --bs-table-color: var(--jp-text);
+  --bs-table-border-color: var(--jp-border);
+}
+[data-theme='dark'] .form-control,
+[data-theme='dark'] .form-select {
+  background-color: var(--jp-surface);
+  border-color: var(--jp-border);
+  color: var(--jp-text);
+}
+[data-theme='dark'] .form-control::placeholder {
+  color: var(--jp-text-muted);
+}
+[data-theme='dark'] .toast-item {
+  background: var(--jp-surface);
+  color: var(--jp-text);
+}
+[data-theme='dark'] .badge.text-bg-light {
+  background-color: var(--jp-surface) !important;
+  color: var(--jp-text) !important;
+  border-color: var(--jp-border) !important;
+}
+
 body {
   margin: 0;
   font-family: var(--bs-body-font-family);
