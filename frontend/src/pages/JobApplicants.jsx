@@ -43,6 +43,9 @@ export default function JobApplicants() {
   // Editing an existing interview's status/notes
   const [editingInterview, setEditingInterview] = useState(null);
   const [editForm, setEditForm] = useState({ status: 'scheduled', feedback: '' });
+  const [viewingResumeFor, setViewingResumeFor] = useState(null); // application id whose resume is expanded
+
+  const API_ORIGIN = 'http://localhost:5000';
 
   const load = () => {
     setLoading(true);
@@ -128,6 +131,7 @@ export default function JobApplicants() {
             <th>Email</th>
             <th>Skills</th>
             <th>Cover Letter</th>
+            <th>Resume</th>
             <th>Status</th>
             <th>Interview</th>
           </tr>
@@ -139,6 +143,15 @@ export default function JobApplicants() {
               <td>{app.Candidate?.User?.email}</td>
               <td>{app.Candidate?.skills || '—'}</td>
               <td style={{ maxWidth: 220 }}>{app.coverLetter || '—'}</td>
+              <td>
+                {app.Candidate?.resumeUrl ? (
+                  <button className="btn btn-sm btn-outline-secondary" onClick={() => setViewingResumeFor(app)}>
+                    View Resume
+                  </button>
+                ) : (
+                  <span className="text-muted small">Not uploaded</span>
+                )}
+              </td>
               <td>
                 <select
                   className={`form-select form-select-sm text-white ${statusColor[app.status]}`}
@@ -232,6 +245,49 @@ export default function JobApplicants() {
           ))}
         </tbody>
       </table>
+
+      {viewingResumeFor && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1500,
+          }}
+          onClick={() => setViewingResumeFor(null)}
+        >
+          <div
+            className="card"
+            style={{ width: '90%', maxWidth: 800, height: '85vh', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="card-body d-flex flex-column" style={{ minHeight: 0 }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="mb-0">{viewingResumeFor.Candidate?.User?.name}'s Resume</h6>
+                <button className="btn-close" onClick={() => setViewingResumeFor(null)} />
+              </div>
+              {viewingResumeFor.Candidate.resumeUrl.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  title="resume-preview"
+                  src={`${API_ORIGIN}${viewingResumeFor.Candidate.resumeUrl}`}
+                  style={{ flex: 1, border: '1px solid var(--jp-border)', borderRadius: 6 }}
+                />
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon">📄</div>
+                  <p>This resume is a Word document — inline preview isn't supported by browsers for this format.</p>
+                  <a
+                    href={`${API_ORIGIN}${viewingResumeFor.Candidate.resumeUrl}`}
+                    className="btn btn-primary btn-sm"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Download to view
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

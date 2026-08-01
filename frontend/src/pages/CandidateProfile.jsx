@@ -103,12 +103,23 @@ export default function CandidateProfile() {
       <div className="border-top pt-3">
         <h5>Resume</h5>
         {profile?.resumeUrl ? (
-          <p>
-            Current resume:{' '}
-            <a href={`http://localhost:5000${profile.resumeUrl}`} target="_blank" rel="noreferrer">
-              View uploaded resume
-            </a>
-          </p>
+          <>
+            {profile.resumeUrl.toLowerCase().endsWith('.pdf') ? (
+              <iframe
+                title="my-resume-preview"
+                src={`http://localhost:5000${profile.resumeUrl}`}
+                style={{ width: '100%', height: 400, border: '1px solid var(--jp-border)', borderRadius: 6 }}
+                className="mb-2"
+              />
+            ) : (
+              <p className="text-muted small">Word documents can't be previewed inline — use the link below to open it.</p>
+            )}
+            <p>
+              <a href={`http://localhost:5000${profile.resumeUrl}`} target="_blank" rel="noreferrer">
+                Open in new tab
+              </a>
+            </p>
+          </>
         ) : (
           <p className="text-muted">No resume uploaded yet.</p>
         )}
