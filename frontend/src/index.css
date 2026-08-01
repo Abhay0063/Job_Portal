@@ -74,6 +74,44 @@
   color: var(--jp-text) !important;
   border-color: var(--jp-border) !important;
 }
+/* Outline buttons default to dark text/border (navy, bootstrap secondary gray, etc.),
+   which nearly disappears against a dark background — lighten them specifically here. */
+[data-theme='dark'] .btn-outline-primary {
+  --bs-btn-color: #6ea3e0;
+  --bs-btn-border-color: #6ea3e0;
+  --bs-btn-hover-bg: #6ea3e0;
+  --bs-btn-hover-border-color: #6ea3e0;
+  --bs-btn-hover-color: #14181f;
+}
+[data-theme='dark'] .btn-outline-secondary {
+  --bs-btn-color: #b7bec9;
+  --bs-btn-border-color: #b7bec9;
+  --bs-btn-hover-bg: #b7bec9;
+  --bs-btn-hover-border-color: #b7bec9;
+  --bs-btn-hover-color: #14181f;
+}
+[data-theme='dark'] .btn-outline-danger {
+  --bs-btn-color: #f28b8b;
+  --bs-btn-border-color: #f28b8b;
+  --bs-btn-hover-bg: #f28b8b;
+  --bs-btn-hover-border-color: #f28b8b;
+  --bs-btn-hover-color: #14181f;
+}
+[data-theme='dark'] .btn-outline-success {
+  --bs-btn-color: #6fcf97;
+  --bs-btn-border-color: #6fcf97;
+  --bs-btn-hover-bg: #6fcf97;
+  --bs-btn-hover-border-color: #6fcf97;
+  --bs-btn-hover-color: #14181f;
+}
+/* Bootstrap's close button (×) is a black SVG icon by default — invert it in dark mode
+   so it's visible against a dark modal/card background instead of nearly disappearing. */
+[data-theme='dark'] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+[data-theme='dark'] .text-muted {
+  color: var(--jp-text-muted) !important;
+}
 
 body {
   margin: 0;
