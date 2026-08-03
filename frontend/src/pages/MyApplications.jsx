@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 const statusLabel = {
   applied: 'Applied',
@@ -19,10 +20,25 @@ const statusColor = {
 };
 
 export default function MyApplications() {
+  const { showToast } = useToast();
+  const [withdrawingId, setWithdrawingId] = useState(null);
   const [applications, setApplications] = useState([]);
   const [interviewsByAppId, setInterviewsByAppId] = useState({});
   const [loading, setLoading] = useState(true);
 
+  const handleWithdraw = async (app) => {
+    if (!window.confirm(`Withdraw your application for "${app.Job?.title}"? This can't be undone.`)) return;
+    setWithdrawingId(app.id);
+    try {
+      await api.delete(`/applications/${app.id}`);
+      setApplications((prev) => prev.filter((a) => a.id !== app.id));
+      showToast('Application withdrawn.', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not withdraw application', 'error');
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
   useEffect(() => {
     Promise.all([
       api.get('/applications/my'),
@@ -51,7 +67,7 @@ export default function MyApplications() {
 
       <table className="table">
         <thead>
-          <tr><th>Job</th><th>Location</th><th>Status</th><th>Applied On</th><th>Interview</th></tr>
+          <tr><th>Job</th><th>Location</th><th>Status</th><th>Applied On</th><th>Interview</th><th>Actions</th></tr>
         </thead>
         <tbody>
           {applications.map((app) => {
@@ -73,6 +89,15 @@ export default function MyApplications() {
                   ) : (
                     <span className="text-muted">Not scheduled</span>
                   )}
+                </td>
+                  <td>
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    disabled={withdrawingId === app.id}
+                    onClick={() => handleWithdraw(app)}
+                  >
+                    {withdrawingId === app.id ? 'Withdrawing...' : 'Withdraw'}
+                  </button>
                 </td>
               </tr>
             );

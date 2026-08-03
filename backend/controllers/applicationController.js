@@ -1,4 +1,5 @@
 const { Application, Job, Candidate, Recruiter, User, Interview } = require('../models');
+const notify = require('../utils/notify');
 
 // POST /api/applications (candidate only)
 const applyToJob = async (req, res) => {
@@ -75,5 +76,25 @@ const updateApplicationStatus = async (req, res) => {
   await application.update({ status });
   return res.json({ application });
 };
+// DELETE /api/applications/:id (candidate, owner only) — withdraw an application
+const withdrawApplication = async (req, res) => {
+  const application = await Application.findByPk(req.params.id, { include: [Job] });
+  if (!application) return res.status(404).json({ message: 'Application not found' });
 
-module.exports = { applyToJob, getMyApplications, getApplicantsForJob, updateApplicationStatus };
+  const candidate = await Candidate.findOne({ where: { userId: req.user.id } });
+  if (!candidate || application.candidateId !== candidate.id) {
+    return res.status(403).json({ message: 'You do not own this application' });
+  }
+
+  const recruiter = await Recruiter.findByPk(application.Job.recruiterId);
+  const jobTitle = application.Job.title;
+
+  await application.destroy(); // cascades to Interview via onDelete: CASCADE
+
+  if (recruiter) {
+    await notify(recruiter.userId, `An applicant withdrew their application for "${jobTitle}"`, `/my-jobs/${application.Job.id}/applicants`);
+  }
+
+  return res.json({ message: 'Application withdrawn' });
+};
+module.exports = { applyToJob, getMyApplications, getApplicantsForJob, updateApplicationStatus, withdrawApplication };
