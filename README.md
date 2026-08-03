@@ -1,96 +1,258 @@
-# Job Portal & Recruitment Management — Session 1
+# Job Portal & Recruitment Management System
 
-## What's in here
-- `/backend` — Express + Sequelize API, already tested against a live MySQL instance (6 tables, 6 FKs confirmed working)
-- `/frontend` — empty, scaffold in a later session with `npm create vite@latest . -- --template react` or CRA
+A full-stack recruitment platform connecting recruiters and candidates, with role-based dashboards, application tracking, interview scheduling, and an admin console for platform oversight.
+
+Built as an internship deliverable. Every feature listed below has been manually tested against a live MySQL instance and a running Express server before being marked complete.
 
 ---
 
-## Step 1 — Install MySQL locally
+## Table of Contents
 
-**Windows**
-1. Download MySQL Installer (Community): https://dev.mysql.com/downloads/installer/
-2. Run it → choose "Server only" (or "Developer Default" if you also want Workbench) → let it install MySQL Server + set a root password when prompted.
-3. Confirm it's running: open a new terminal (cmd/PowerShell) and run:
-   ```
-   mysql -u root -p
-   ```
-   Enter the root password you set. If you land on a `mysql>` prompt, it's running. Type `exit` to leave.
-4. If `mysql` isn't recognized, add `C:\Program Files\MySQL\MySQL Server 8.0\bin` to your PATH.
+- [Project Overview](#project-overview)
+- [Technology Stack](#technology-stack)
+- [System Architecture](#system-architecture)
+- [Database Schema](#database-schema)
+- [Features](#features)
+- [API Documentation](#api-documentation)
+- [Installation Guide](#installation-guide)
+- [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
+- [Screenshots](#screenshots)
+- [Known Limitations](#known-limitations)
 
-**Mac**
-```
-brew install mysql
-brew services start mysql
-mysql -u root
-```
-If you land on `mysql>`, it's running.
+---
 
-**Linux (Ubuntu/Debian)**
+## Project Overview
+
+Job Portal is a three-role recruitment platform:
+
+- **Candidates** browse and filter jobs, apply, save jobs for later, track application status, attend scheduled interviews, and manage a profile with a resume upload.
+- **Recruiters** post and manage job listings, review applicants, update application status through a defined pipeline, schedule interviews, and view/update interview outcomes.
+- **Admins** oversee the platform via a dashboard with usage statistics, growth charts, and user management.
+
+The system supports the full recruitment lifecycle: `Applied → Under Review → Shortlisted → Interview Scheduled → Selected / Rejected`.
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19 (Vite), React Router, Bootstrap 5, Recharts |
+| Backend | Node.js, Express.js |
+| Database | MySQL 8, Sequelize ORM |
+| Authentication | JWT (jsonwebtoken), bcryptjs for password hashing |
+| File Uploads | Multer (resume upload — PDF/DOC/DOCX, 5MB limit) |
+| Notifications | Custom in-app notification system (polling-based) |
+
+## System Architecture
+
 ```
-sudo apt update
-sudo apt install mysql-server
-sudo service mysql start   # or: sudo systemctl start mysql
-sudo mysql
+┌─────────────────┐        HTTPS/JSON         ┌──────────────────┐        Sequelize ORM        ┌─────────────┐
+│  React Frontend  │ ───────────────────────►  │  Express Backend │ ───────────────────────────► │  MySQL DB   │
+│  (Vite, port     │ ◄───────────────────────  │  (port 5000)     │ ◄─────────────────────────── │             │
+│   5173)          │      JWT in headers        │                  │                              │             │
+└─────────────────┘                            └──────────────────┘                              └─────────────┘
+                                                        │
+                                                        ▼
+                                                 uploads/resumes/
+                                                 (local disk storage)
 ```
 
-## Step 2 — Create the database and app user
-Once you're at the `mysql>` prompt (any OS), run:
+**Request flow:** Every protected route passes through `protect` middleware (verifies JWT, attaches `req.user`) and, where relevant, `authorize(...roles)` middleware (enforces role-based access). Controllers never trust `req.body` for ownership — every update/delete re-verifies that the authenticated user actually owns the resource (e.g., a recruiter can only edit jobs tied to their own `Recruiter` profile, not by job ID alone).
+
+**Folder structure:**
+```
+job-portal/
+├── backend/
+│   ├── config/database.js       # Sequelize connection
+│   ├── models/                  # Sequelize models + associations (index.js)
+│   ├── controllers/             # Business logic per resource
+│   ├── routes/                  # Express route definitions
+│   ├── middleware/               # auth (JWT + roles), resume upload (multer)
+│   ├── utils/notify.js          # Notification creation helper
+│   ├── seedAdmin.js             # One-time admin account creation
+│   ├── sync.js                  # Creates/alters DB tables from models
+│   └── server.js                # App entry point
+└── frontend/
+    └── src/
+        ├── api/axios.js         # Axios instance, JWT interceptor, 401 auto-logout
+        ├── context/              # Auth, Toast, Theme providers
+        ├── components/           # Navbar, ProtectedRoute, NotificationBell
+        └── pages/                 # One component per route
+```
+
+## Database Schema
+
+Seven tables, matching the seven Sequelize models in `backend/models/`:
+
+| Table | Purpose | Key Fields |
+|---|---|---|
+| `users` | Base identity for all roles | `email` (unique), `password` (hashed), `role` (enum: admin/recruiter/candidate) |
+| `recruiters` | Company profile, 1:1 with a User | `userId` (FK), `companyName`, `companyWebsite` |
+| `candidates` | Candidate profile, 1:1 with a User | `userId` (FK), `resumeUrl`, `skills`, `education`, `experienceYears` |
+| `jobs` | Job postings | `recruiterId` (FK), `title`, `skillsRequired`, `experienceRequired`, `salaryMin/Max`, `status` (open/closed) |
+| `applications` | A candidate's application to a job | `jobId` (FK), `candidateId` (FK), `status` (enum, see pipeline below) |
+| `interviews` | Interview tied to one application | `applicationId` (FK, 1:1), `scheduledAt`, `status` (scheduled/completed/passed/failed) |
+| `saved_jobs` | Candidate bookmarks | `candidateId` (FK), `jobId` (FK), unique per pair |
+| `notifications` | In-app notifications | `userId` (FK), `message`, `link`, `isRead` |
+
+**Relationships:**
+```
+User (1) ──── (1) Recruiter ──── (many) Job ──── (many) Application ──── (1) Interview
+User (1) ──── (1) Candidate ─────────────────────────/         \
+                    │                                            └── (many) SavedJob ── (many) Job
+                    └── (many) Notification (via User, not Candidate)
+```
+
+All foreign-key relationships use `onDelete: CASCADE` — deleting a user removes their profile, and deleting an application removes its interview, so there are no orphaned records.
+
+**Application status pipeline:** `applied → under_review → shortlisted → interview_scheduled → selected | rejected`. Scheduling an interview automatically advances the application to `interview_scheduled` — this is enforced server-side, not left to the recruiter to remember.
+
+## Features
+
+**Authentication & Roles**
+- JWT-based auth, bcrypt password hashing, role-based route protection (frontend `ProtectedRoute` + backend `authorize()` middleware)
+- Three roles: Admin (seeded via script, never via public registration), Recruiter, Candidate
+
+**Recruiter**
+- Post, edit, close/reopen job listings (title, description, location, salary range, skills required, experience required, job type)
+- View applicants per job, update application status, schedule interviews, update interview status and add notes
+- View and download/preview candidate resumes inline (PDF)
+
+**Candidate**
+- Browse/search/filter jobs by title, location, and job type, with pagination
+- Apply to jobs, withdraw applications, save jobs for later
+- Editable profile (skills, education, experience) with resume upload (PDF/DOC/DOCX)
+- Track application status and interview schedule in one place
+
+**Admin**
+- Dashboard with platform-wide stats (total users, recruiters, candidates, jobs, applications, active jobs)
+- Charts: user growth over time, applications per month, jobs posted by recruiter
+- View and delete any user (cascades to their profile/jobs/applications)
+
+**Cross-cutting**
+- In-app notifications (new application received, status changes, interview scheduled/updated)
+- Dark/light theme toggle, persisted per browser
+- Toast notifications, skeleton loading states, empty states throughout
+- Global error handling — a single bad request can't crash the server
+
+## API Documentation
+
+Base URL: `http://localhost:5000/api`. All protected routes require `Authorization: Bearer <token>`.
+
+### Auth (`/auth`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/auth/register` | Public | Register as recruiter or candidate |
+| POST | `/auth/login` | Public | Returns `{ token, user }` |
+| GET | `/auth/me` | Authenticated | Returns the current user |
+
+### Jobs (`/jobs`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/jobs` | Public | List open jobs. Query params: `search`, `location`, `jobType`, `page`, `limit` |
+| GET | `/jobs/:id` | Public | Single job detail |
+| POST | `/jobs` | Recruiter | Create a job |
+| PUT | `/jobs/:id` | Recruiter (owner) | Update a job, including `status` to close/reopen |
+| DELETE | `/jobs/:id` | Recruiter (owner) | Delete a job |
+| GET | `/jobs/my/postings` | Recruiter | List the recruiter's own jobs with applicant counts |
+
+### Applications (`/applications`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/applications` | Candidate | Apply to a job (`jobId`, `coverLetter`) |
+| GET | `/applications/my` | Candidate | List own applications with interview status |
+| DELETE | `/applications/:id` | Candidate (owner) | Withdraw an application |
+| GET | `/applications/job/:jobId` | Recruiter (owner) | List applicants for a job, with candidate + interview data |
+| PUT | `/applications/:id/status` | Recruiter (owner) | Update status through the pipeline |
+
+### Interviews (`/interviews`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/interviews` | Recruiter (owner) | Schedule an interview (`applicationId`, `scheduledAt`, `mode`, `meetingLink`) |
+| GET | `/interviews/my` | Candidate | List own scheduled interviews |
+| PUT | `/interviews/:id` | Recruiter (owner) | Update status (scheduled/completed/passed/failed), notes, or reschedule |
+
+### Candidates (`/candidates`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/candidates/me` | Candidate | Own profile |
+| PUT | `/candidates/me` | Candidate | Update skills, education, experience |
+| POST | `/candidates/me/resume` | Candidate | Upload resume (multipart, field name `resume`) |
+| POST | `/candidates/me/saved-jobs` | Candidate | Save a job (`jobId`) |
+| DELETE | `/candidates/me/saved-jobs/:jobId` | Candidate | Unsave a job |
+| GET | `/candidates/me/saved-jobs` | Candidate | List saved jobs |
+
+### Admin (`/admin`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/admin/dashboard` | Admin | Stats + chart data in one call |
+| GET | `/admin/users` | Admin | List all users |
+| DELETE | `/admin/users/:id` | Admin | Delete a user (cascades) |
+
+### Notifications (`/notifications`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/notifications/my` | Authenticated | List own notifications + unread count |
+| PUT | `/notifications/:id/read` | Authenticated | Mark one as read |
+| PUT | `/notifications/read-all` | Authenticated | Mark all as read |
+
+**Standard error format:** `{ "message": "..." }` with an appropriate HTTP status (400 validation, 401 auth, 403 authorization, 404 not found, 409 conflict, 500 server error).
+
+## Installation Guide
+
+### Prerequisites
+- Node.js (v18+)
+- MySQL 8
+
+### 1. Database
 ```sql
 CREATE DATABASE job_portal_db;
-CREATE USER 'job_portal_user'@'localhost' IDENTIFIED BY 'DevPass123!';
+CREATE USER 'job_portal_user'@'localhost' IDENTIFIED BY 'your_password_here';
 GRANT ALL PRIVILEGES ON job_portal_db.* TO 'job_portal_user'@'localhost';
 FLUSH PRIVILEGES;
-exit;
 ```
-Change the password before you ever deploy this anywhere. `DevPass123!` is a local-dev placeholder, not a real secret.
 
-## Step 3 — Install backend deps and configure env
-```
+### 2. Backend
+```bash
 cd backend
 npm install
-cp .env.example .env
-```
-`.env` already matches the DB/user you just created, so you shouldn't need to edit it unless you used different credentials.
-
-## Step 4 — Sync the database (create tables)
-```
-npm run sync
-```
-**Expected output:**
-```
-✅ Connection to MySQL established.
-✅ All tables synced: users, recruiters, candidates, jobs, applications, interviews.
-```
-Verify it yourself:
-```
-mysql -u job_portal_user -p job_portal_db -e "SHOW TABLES;"
-```
-You should see: `applications, candidates, interviews, jobs, recruiters, users`.
-
-## Step 5 — Start the server
-```
+cp .env.example .env   # then fill in DB credentials and a real JWT_SECRET
+npm run sync            # creates all tables
+npm run seed:admin      # creates the one admin account
 npm run dev
 ```
-**Expected output:**
-```
-✅ Database connected.
-🚀 Server running on http://localhost:5000
-```
-Visit `http://localhost:5000/api/health` — you should get `{"status":"ok","message":"Job Portal API is running"}`.
 
----
-
-## Data model (session 1)
+### 3. Frontend
+```bash
+cd frontend
+npm install
+npm run dev
 ```
-User (1) ---- (1) Recruiter ---- (many) Job ---- (many) Application ---- (1) Interview
-User (1) ---- (1) Candidate ------------------------------/
-```
-- `User`: role enum (admin/recruiter/candidate) — this is your auth anchor for session 2
-- `Recruiter`/`Candidate`: split profile tables, both FK to `User.id` — keeps `users` table lean and avoids nullable columns for fields that only apply to one role
-- `Job` belongs to `Recruiter`; `Application` links `Candidate` to `Job`; `Interview` belongs to `Application`
 
-## What's next (session 2)
-- `bcrypt` for password hashing, `jsonwebtoken` for auth — neither is installed yet, intentionally
-- `middleware/auth.js` for route protection + role checks
-- `routes/authRoutes.js` + `controllers/authController.js` (register/login)
+Visit `http://localhost:5173`. Backend health check: `http://localhost:5000/api/health`.
+
+## Environment Variables
+
+Backend `.env` (see `backend/.env.example`):
+
+| Variable | Description |
+|---|---|
+| `PORT` | Backend port (default 5000) |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_DIALECT` | MySQL connection |
+| `JWT_SECRET` | Signs auth tokens — use a long random string, never commit a real one |
+| `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
+
+## Deployment
+
+*To be completed — see project board / next steps.*
+
+## Screenshots
+
+*Add screenshots here before submitting: job listing, job detail, recruiter applicant dashboard, admin dashboard with charts, dark mode.*
+
+## Known Limitations
+
+- **Uploaded resumes are stored on local disk**, not cloud storage. On platforms with an ephemeral filesystem (most free-tier hosts), files may not survive a redeploy or restart — acceptable for a grading/demo deployment, not for production.
+- **Notifications use polling** (every 30s), not WebSockets — sufficient for this scope, not real-time in the strictest sense.
+- **DOC/DOCX resumes** can't be previewed inline in the browser (no native renderer) — they fall back to a download link; only PDF previews inline.
+- The seeded admin password is visible in `seedAdmin.js` in plain text — fine for a local/demo environment, not a real production practice.
