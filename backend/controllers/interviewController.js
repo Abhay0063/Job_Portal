@@ -1,4 +1,5 @@
 const { Interview, Application, Job, Recruiter, Candidate, User } = require('../models');
+const notify = require('../utils/notify');
 
 // POST /api/interviews (recruiter, owner of the job the application belongs to)
 const scheduleInterview = async (req, res) => {
@@ -32,6 +33,12 @@ const scheduleInterview = async (req, res) => {
   // recruiter to remember to update two things separately.
   if (!['selected', 'rejected'].includes(application.status)) {
     await application.update({ status: 'interview_scheduled' });
+  }
+
+  const candidate = await Candidate.findByPk(application.candidateId);
+  if (candidate) {
+    const when = new Date(scheduledAt).toLocaleString();
+    await notify(candidate.userId, `Interview scheduled for "${application.Job.title}" on ${when}`, '/my-applications');
   }
 
   return res.status(201).json({ interview });
@@ -81,6 +88,14 @@ const updateInterview = async (req, res) => {
   if (feedback !== undefined) updates.feedback = feedback;
 
   await interview.update(updates);
+
+  if (status !== undefined) {
+    const candidate = await Candidate.findByPk(interview.Application.candidateId);
+    if (candidate) {
+      await notify(candidate.userId, `Your interview for "${interview.Application.Job.title}" is now: ${status}`, '/my-applications');
+    }
+  }
+
   return res.json({ interview });
 };
 

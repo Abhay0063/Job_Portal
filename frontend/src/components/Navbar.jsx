@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -40,6 +41,7 @@ export default function Navbar() {
         >
           {theme === 'light' ? '🌙' : '☀️'}
         </button>
+        {user && <NotificationBell />}
         {user ? (
           <>
             <span className="text-white-50 small">{user.name} · {user.role}</span>

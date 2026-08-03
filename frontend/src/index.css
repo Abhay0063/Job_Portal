@@ -45,6 +45,17 @@
   --bs-body-color: var(--jp-text);
   --bs-link-color: #6ea3e0;
   --bs-link-hover-color: #8fb8e8;
+
+  /* .text-muted, .form-text, card subtitles, etc. all read from these — Bootstrap's
+     defaults are a dark gray meant for light backgrounds, so they nearly vanish
+     against a dark one unless explicitly overridden here. */
+  --bs-secondary-color: var(--jp-text-muted);
+  --bs-tertiary-color: var(--jp-text-muted);
+  --bs-secondary-bg: var(--jp-surface);
+  --bs-tertiary-bg: var(--jp-surface);
+}
+[data-theme='dark'] .text-muted {
+  color: var(--jp-text-muted) !important;
 }
 [data-theme='dark'] .card {
   background-color: var(--jp-surface);
@@ -109,6 +120,8 @@
 [data-theme='dark'] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
+/* Bootstrap's .text-muted is a fixed gray that nearly disappears against a dark
+   background — point it at the muted color already defined for dark mode. */
 [data-theme='dark'] .text-muted {
   color: var(--jp-text-muted) !important;
 }

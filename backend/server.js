@@ -24,6 +24,7 @@ app.use('/api/applications', require('./routes/applicationRoutes'));
 app.use('/api/interviews', require('./routes/interviewRoutes'));
 app.use('/api/candidates', require('./routes/candidateRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Last-resort error handler. Any error not already caught by a controller's
 // own try/catch lands here instead of crashing the whole process.
