@@ -126,5 +126,27 @@ const getMyJobs = async (req, res) => {
 
   return res.json({ jobs });
 };
+// GET /api/jobs/my/stats (recruiter only) — aggregate counts for the recruiter dashboard
+const getMyJobStats = async (req, res) => {
+  const recruiter = await Recruiter.findOne({ where: { userId: req.user.id } });
+  if (!recruiter) return res.status(403).json({ message: 'No recruiter profile found' });
 
-module.exports = { createJob, getJobs, getJobById, updateJob, deleteJob, getMyJobs };
+  const jobs = await Job.findAll({ where: { recruiterId: recruiter.id }, attributes: ['id', 'status'] });
+  const jobIds = jobs.map((j) => j.id);
+
+  const [totalApplications, shortlistedCount] = await Promise.all([
+    jobIds.length ? Application.count({ where: { jobId: jobIds } }) : 0,
+    jobIds.length ? Application.count({ where: { jobId: jobIds, status: 'shortlisted' } }) : 0,
+  ]);
+
+  const activeJobListings = jobs.filter((j) => j.status === 'open').length;
+
+  return res.json({
+    activeJobListings,
+    totalPostings: jobs.length,
+    totalApplications,
+    shortlistedCount,
+  });
+};
+
+module.exports = { createJob, getJobs, getJobById, updateJob, deleteJob, getMyJobs, getMyJobStats };
