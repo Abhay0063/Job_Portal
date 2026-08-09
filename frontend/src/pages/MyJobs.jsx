@@ -50,7 +50,25 @@ export default function MyJobs() {
       setUpdatingId(null);
     }
   };
-
+  const handleDelete = async (job) => {
+    if (!window.confirm(`Delete "${job.title}"? This also removes all its applications and interviews. This can't be undone.`)) return;
+    setUpdatingId(job.id);
+    try {
+      await api.delete(`/jobs/${job.id}`);
+      setJobs((prev) => prev.filter((j) => j.id !== job.id));
+      setStats((prev) => prev && ({
+        ...prev,
+        totalPostings: prev.totalPostings - 1,
+        activeJobListings: job.status === 'open' ? prev.activeJobListings - 1 : prev.activeJobListings,
+        totalApplications: prev.totalApplications - (job.Applications?.length ?? 0),
+      }));
+      showToast('Job deleted.', 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Could not delete job', 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -98,11 +116,19 @@ export default function MyJobs() {
                     <Link to={`/jobs/${job.id}`} className="me-2">View</Link>
                     <Link to={`/my-jobs/${job.id}/applicants`} className="me-2">Applicants</Link>
                     <button
+                      className="me-2"
                       className={`btn btn-sm ${job.status === 'open' ? 'btn-outline-secondary' : 'btn-outline-success'}`}
                       disabled={updatingId === job.id}
                       onClick={() => toggleStatus(job)}
                     >
                       {job.status === 'open' ? 'Close' : 'Reopen'}
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      disabled={updatingId === job.id}
+                      onClick={() => handleDelete(job)}
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
