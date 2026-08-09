@@ -10,6 +10,7 @@ import MyJobs from './pages/MyJobs';
 import JobApplicants from './pages/JobApplicants';
 import MyApplications from './pages/MyApplications';
 import CandidateProfile from './pages/CandidateProfile';
+import CandidateDashboard from './pages/CandidateDashboard';
 import SavedJobs from './pages/SavedJobs';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
@@ -34,6 +35,10 @@ export default function App() {
         <Route
           path="/my-jobs/:jobId/applicants"
           element={<ProtectedRoute roles={['recruiter']}><JobApplicants /></ProtectedRoute>}
+        />
+        <Route
+          path="/candidate-dashboard"
+          element={<ProtectedRoute roles={['candidate']}><CandidateDashboard /></ProtectedRoute>}
         />
         <Route
           path="/my-applications"
