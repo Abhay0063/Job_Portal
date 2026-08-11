@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api/axios';
+import api, { API_BASE } from '../api/axios';
 import { useToast } from '../context/ToastContext';
 
 const statusOptions = [
@@ -44,8 +44,6 @@ export default function JobApplicants() {
   const [editingInterview, setEditingInterview] = useState(null);
   const [editForm, setEditForm] = useState({ status: 'scheduled', feedback: '' });
   const [viewingResumeFor, setViewingResumeFor] = useState(null); // application id whose resume is expanded
-
-  const API_ORIGIN = 'http://localhost:5000';
 
   const load = () => {
     setLoading(true);
@@ -269,7 +267,7 @@ export default function JobApplicants() {
               {viewingResumeFor.Candidate.resumeUrl.toLowerCase().endsWith('.pdf') ? (
                 <iframe
                   title="resume-preview"
-                  src={`${API_ORIGIN}${viewingResumeFor.Candidate.resumeUrl}`}
+                  src={`${API_BASE}${viewingResumeFor.Candidate.resumeUrl}`}
                   style={{ flex: 1, border: '1px solid var(--jp-border)', borderRadius: 6 }}
                 />
               ) : (
@@ -277,7 +275,7 @@ export default function JobApplicants() {
                   <div className="empty-icon">📄</div>
                   <p>This resume is a Word document — inline preview isn't supported by browsers for this format.</p>
                   <a
-                    href={`${API_ORIGIN}${viewingResumeFor.Candidate.resumeUrl}`}
+                    href={`${API_BASE}${viewingResumeFor.Candidate.resumeUrl}`}
                     className="btn btn-primary btn-sm"
                     target="_blank"
                     rel="noreferrer"

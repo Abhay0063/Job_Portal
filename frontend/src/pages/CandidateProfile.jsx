@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/axios';
+import api, { API_BASE } from '../api/axios';
 import { useToast } from '../context/ToastContext';
 
 export default function CandidateProfile() {
@@ -107,7 +107,7 @@ export default function CandidateProfile() {
             {profile.resumeUrl.toLowerCase().endsWith('.pdf') ? (
               <iframe
                 title="my-resume-preview"
-                src={`http://localhost:5000${profile.resumeUrl}`}
+                src={`${API_BASE}${profile.resumeUrl}`}
                 style={{ width: '100%', height: 400, border: '1px solid var(--jp-border)', borderRadius: 6 }}
                 className="mb-2"
               />
@@ -115,7 +115,7 @@ export default function CandidateProfile() {
               <p className="text-muted small">Word documents can't be previewed inline — use the link below to open it.</p>
             )}
             <p>
-              <a href={`http://localhost:5000${profile.resumeUrl}`} target="_blank" rel="noreferrer">
+              <a href={`${API_BASE}${profile.resumeUrl}`} target="_blank" rel="noreferrer">
                 Open in new tab
               </a>
             </p>
