@@ -118,6 +118,7 @@ export default function AdminDashboard() {
       </div>
 
       <h5>Manage Users</h5>
+      <div className="table-responsive">
       <table className="table">
         <thead>
           <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr>
@@ -140,6 +141,7 @@ export default function AdminDashboard() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

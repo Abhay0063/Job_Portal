@@ -65,6 +65,7 @@ export default function MyApplications() {
         </div>
       )}
 
+      <div className="table-responsive">
       <table className="table">
         <thead>
           <tr><th>Job</th><th>Location</th><th>Status</th><th>Applied On</th><th>Interview</th><th>Actions</th></tr>
@@ -104,6 +105,7 @@ export default function MyApplications() {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -124,6 +124,7 @@ export default function JobApplicants() {
         </div>
       )}
 
+      <div className="table-responsive">
       <table className="table align-middle">
         <thead>
           <tr>
@@ -245,6 +246,7 @@ export default function JobApplicants() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {viewingResumeFor && (
         <div

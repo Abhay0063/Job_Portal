@@ -21,6 +21,7 @@ export default function MyJobs() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function MyJobs() {
       setUpdatingId(null);
     }
   };
+
   const handleDelete = async (job) => {
     if (!window.confirm(`Delete "${job.title}"? This also removes all its applications and interviews. This can't be undone.`)) return;
     setUpdatingId(job.id);
@@ -69,6 +71,7 @@ export default function MyJobs() {
       setUpdatingId(null);
     }
   };
+
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -116,8 +119,7 @@ export default function MyJobs() {
                     <Link to={`/jobs/${job.id}`} className="me-2">View</Link>
                     <Link to={`/my-jobs/${job.id}/applicants`} className="me-2">Applicants</Link>
                     <button
-                      className="me-2"
-                      className={`btn btn-sm ${job.status === 'open' ? 'btn-outline-secondary' : 'btn-outline-success'}`}
+                      className={`btn btn-sm me-2 ${job.status === 'open' ? 'btn-outline-secondary' : 'btn-outline-success'}`}
                       disabled={updatingId === job.id}
                       onClick={() => toggleStatus(job)}
                     >
