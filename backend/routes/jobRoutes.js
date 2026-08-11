@@ -5,7 +5,7 @@ const {
 } = require('../controllers/jobController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-// Order matters: /my/postings must come before /:id or Express will treat "my" as an id
+// Order matters: /my/postings and /my/stats must come before /:id or Express will treat "my" as an id
 router.get('/my/postings', protect, authorize('recruiter'), getMyJobs);
 router.get('/my/stats', protect, authorize('recruiter'), getMyJobStats);
 

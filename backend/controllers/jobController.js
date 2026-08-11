@@ -126,6 +126,7 @@ const getMyJobs = async (req, res) => {
 
   return res.json({ jobs });
 };
+
 // GET /api/jobs/my/stats (recruiter only) — aggregate counts for the recruiter dashboard
 const getMyJobStats = async (req, res) => {
   const recruiter = await Recruiter.findOne({ where: { userId: req.user.id } });
