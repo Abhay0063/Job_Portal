@@ -9,7 +9,7 @@ import PostJob from './pages/PostJob';
 import MyJobs from './pages/MyJobs';
 import JobApplicants from './pages/JobApplicants';
 import MyApplications from './pages/MyApplications';
-import CandidateDashboard from './pages/CandidateDashboard';
+import CandidateDashBoard from './pages/CandidateDashBoard';
 import CandidateProfile from './pages/CandidateProfile';
 import SavedJobs from './pages/SavedJobs';
 import AdminDashboard from './pages/AdminDashboard';
