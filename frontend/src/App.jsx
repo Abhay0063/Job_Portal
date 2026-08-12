@@ -38,7 +38,7 @@ export default function App() {
         />
         <Route
           path="/candidate-dashboard"
-          element={<ProtectedRoute roles={['candidate']}><CandidateDashboard /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['candidate']}><CandidateDashBoard /></ProtectedRoute>}
         />
         <Route
           path="/my-applications"

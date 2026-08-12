@@ -8,7 +8,7 @@ const { sequelize } = require('./models');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
 
 // Serve uploaded resumes as static files, e.g. http://localhost:5000/uploads/resumes/xyz.pdf
