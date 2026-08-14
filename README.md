@@ -140,8 +140,9 @@ All foreign-key relationships use `onDelete: CASCADE` — deleting a user remove
 
 ## API Documentation
 
-**Local base URL:** `http://localhost:5000/api`
-**Live base URL:** `https://job-portal-rabw.onrender.com` 
+**Local base URL:** `http://localhost:5000/api/`
+**Live base URL:** `https://job-portal-rabw.onrender.com/api` 
+**Health check:** /api/health — e.g. `https://job-portal-rabw.onrender.com/api/health`, confirmed live, returns {"status":"ok","message":"Job Portal API is running"}
 All protected routes require `Authorization: Bearer <token>`.
 
 ### Auth (`/auth`)
@@ -277,7 +278,7 @@ Backend `.env` (see `backend/.env.example`):
 
 ### 3. Frontend (Vercel)
 1. Push `frontend/` to a Git repo, import it into Vercel, set root directory to `frontend` if needed.
-2. Set the API base URL as a Vercel environment variable: `VITE_API_URL= https://job-portal-rabw.onrender.com`, and update `frontend/src/api/axios.js` to read it via `import.meta.env.VITE_API_URL` instead of a hardcoded `localhost:5000`.
+2. Set the API base URL as a Vercel environment variable: `VITE_API_URL= https://job-portal-rabw.onrender.com/api/health`, and update `frontend/src/api/axios.js` to read it via `import.meta.env.VITE_API_URL` instead of a hardcoded `localhost:5000`.
 3. Deploy. Vercel auto-builds on push once connected.
    **Deployed frontend URL:** `https://job-portal-nine-tau.vercel.app`
 4. Add a `vercel.json` at the frontend root with a rewrite rule so client-side routes (e.g. `/login`) resolve correctly on direct hit or page refresh instead of returning a 404:
@@ -291,32 +292,32 @@ Backend `.env` (see `backend/.env.example`):
 5. On Render, add `https://job-portal-nine-tau.vercel.app` to the backend's CORS allow-list so cross-origin requests aren't rejected.
 
 ### Post-deploy checklist
-- [ ] Hit `https://<render-url>/api/health` to confirm the backend is up and can reach Aiven.
+- [ ] Hit `https://job-portal-rabw.onrender.com/api/health` to confirm the backend is up and can reach Aiven.
 - [ ] Log in as the seeded admin from the live frontend to confirm the full round trip (frontend → Render → Aiven) works.
 - [ ] Confirm resume uploads still work — Render's disk is ephemeral, so uploaded files will not survive a redeploy or restart (already noted under Known Limitations).
 - [ ] Replace `DB_SSL_REJECT_UNAUTHORIZED=false` with the Aiven CA cert before treating this as more than a demo deployment.
 
 ## Screenshots
 
-> Images live in `frontend/public/screenshots/`. Commit the PNGs with the exact filenames below and these will render automatically — no further README edits needed.
+> Images live in `docs/screenshots/`. Commit the PNGs with the exact filenames below and these will render automatically — no further README edits needed.
 
 **Job Listing**
-<img src="frontend/public/screenshots/jobs.png"  alt="Job listing page with search and filters">
+<img src="docs/screenshots/jobs.png" >
 
 **Candidate DashBoard**
-<img src="frontend/public/screenshots/candidate.png"  alt="Single job detail view">
+<img src="docs/screenshots/candidate.png" >
 
 **Recruiter Applicant Dashboard**
-<img src="frontend/public/screenshots/recruiterPage.png"  alt="Recruiter view of applicants for a job">
+<img src="docs/screenshots/recruiterPage.png" >
 
 **Admin Dashboard (charts)**
-<img src="frontend/public/screenshots/adminDashboard.png"  alt="Admin dashboard with growth and application charts">
+<img src="docs/screenshots/adminDashboard.png"  >
 
 **Light Mode**
-<img src="frontend/public/screenshots/dark.png"  alt="Application in dark theme">
+<img src="docs/screenshots/dark.png" >
 
 **Application**
-<img src="frontend/public/screenshots/myapplication.png"  alt="Application in dark theme">
+<img src="docs/screenshots/myapplication.png" >
 
 ## Known Limitations
 
