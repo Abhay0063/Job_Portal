@@ -1,5 +1,9 @@
 # Job Portal & Recruitment Management System
 
+**🔗 Live Demo:** [job-portal-nine-tau.vercel.app](https://job-portal-nine-tau.vercel.app) &nbsp;|&nbsp; **⚙️ API Base:** `https://job-portal-rabw.onrender.com` &nbsp;|&nbsp; **📦 Repo:** `https://github.com/Abhay0063/Job_Portal` 
+
+![Frontend](https://img.shields.io/badge/frontend-Vercel-black) ![Backend](https://img.shields.io/badge/backend-Render-46E3B7) ![Database](https://img.shields.io/badge/database-Aiven%20MySQL-00B9FF) 
+
 A full-stack recruitment platform connecting recruiters and candidates, with role-based dashboards, application tracking, interview scheduling, and an admin console for platform oversight.
 
 Built as an internship deliverable. Every feature listed below has been manually tested against a live MySQL instance and a running Express server before being marked complete.
@@ -46,10 +50,10 @@ The system supports the full recruitment lifecycle: `Applied → Under Review �
 ## System Architecture
 
 ```
-┌─────────────────┐        HTTPS/JSON         ┌──────────────────┐        Sequelize ORM        ┌─────────────┐
-│  React Frontend  │ ───────────────────────►  │  Express Backend │ ───────────────────────────► │  MySQL DB   │
-│  (Vite, port     │ ◄───────────────────────  │  (port 5000)     │ ◄─────────────────────────── │             │
-│   5173)          │      JWT in headers        │                  │                              │             │
+┌─────────────────┐        HTTPS/JSON          ┌──────────────────┐        Sequelize ORM         ┌─────────────┐
+│  React Frontend │ ───────────────────────►   |  Express Backend │ ───────────────────────────► │  MySQL DB   │
+│  (Vite, port    │ ◄───────────────────────   |  (port 5000)     │ ◄─────────────────────────── │             │
+│   5173)         │      JWT in headers        │                  │                              │             │
 └─────────────────┘                            └──────────────────┘                              └─────────────┘
                                                         │
                                                         ▼
@@ -137,7 +141,9 @@ All foreign-key relationships use `onDelete: CASCADE` — deleting a user remove
 
 ## API Documentation
 
-Base URL: `http://localhost:5000/api`. All protected routes require `Authorization: Bearer <token>`.
+**Local base URL:** `http://localhost:5000/api`
+**Live base URL:** `https://job-portal-rabw.onrender.com` 
+All protected routes require `Authorization: Bearer <token>`.
 
 ### Auth (`/auth`)
 | Method | Endpoint | Access | Description |
@@ -265,14 +271,25 @@ Backend `.env` (see `backend/.env.example`):
    npm run seed:admin
    ```
    Do not run `sync` on every deploy — it's a one-time/schema-change step, not part of the normal start command.
-5. Note the deployed backend URL (e.g. `https://job-portal-backend.onrender.com`) — the frontend needs it next.
+5. Note the deployed backend URL — fill in below once confirmed:
+   **Backend URL:** `https://job-portal-rabw.onrender.com` 
 6. Render's free tier spins down on inactivity; the first request after idle can take 30–60s to respond. Mention this if demoing live.
+7. **Database service must also stay reachable** — Aiven's free tier auto-powers-off after inactivity (see [Known Limitations](#known-limitations)). Confirm the Aiven service shows `Running`, not `Powered off` or `Rebuilding`, before demoing.
 
 ### 3. Frontend (Vercel)
 1. Push `frontend/` to a Git repo, import it into Vercel, set root directory to `frontend` if needed.
-2. Set the API base URL as a Vercel environment variable (e.g. `VITE_API_URL=https://job-portal-backend.onrender.com/api`) and update `frontend/src/api/axios.js` to read it via `import.meta.env.VITE_API_URL` instead of a hardcoded `localhost:5000`.
+2. Set the API base URL as a Vercel environment variable: `VITE_API_URL= https://job-portal-rabw.onrender.com`, and update `frontend/src/api/axios.js` to read it via `import.meta.env.VITE_API_URL` instead of a hardcoded `localhost:5000`.
 3. Deploy. Vercel auto-builds on push once connected.
-4. On Render, add the deployed Vercel URL to the backend's CORS allow-list so cross-origin requests aren't rejected.
+   **Deployed frontend URL:** `https://job-portal-nine-tau.vercel.app`
+4. Add a `vercel.json` at the frontend root with a rewrite rule so client-side routes (e.g. `/login`) resolve correctly on direct hit or page refresh instead of returning a 404:
+   ```json
+   {
+     "rewrites": [
+       { "source": "/(.*)", "destination": "/index.html" }
+     ]
+   }
+   ```
+5. On Render, add `https://job-portal-nine-tau.vercel.app` to the backend's CORS allow-list so cross-origin requests aren't rejected.
 
 ### Post-deploy checklist
 - [ ] Hit `https://<render-url>/api/health` to confirm the backend is up and can reach Aiven.
@@ -281,18 +298,26 @@ Backend `.env` (see `backend/.env.example`):
 - [ ] Replace `DB_SSL_REJECT_UNAUTHORIZED=false` with the Aiven CA cert before treating this as more than a demo deployment.
 
 ## Screenshots
-1. Job DashBoard
-   ![Job DashBoard](frontend/public/screenshots/jobs.png)
-2. Admin DashBoard
-   ![Admin DashBoard](frontend/public/screenshots/adminDashboard.png)
-3. Recruiter
-   ![Recruiter DashBoard](frontend/public/screenshots/recruiterPage.png)
-4. Candidate
-   ![Candidate DashBoard](frontend/public/screenshots/candidate.png)
-5. Candidate - My Application
-   ![My Application](frontend/public/screenshots/myapplication.png)
-6. Light Theme
-   ![Theme](frontend/public/screenshots/dark.png)
+
+> Images live in `frontend/public/screenshots/`. Commit the PNGs with the exact filenames below and these will render automatically — no further README edits needed.
+
+**Job Listing**
+<img src="frontend/public/screenshots/jobs.png" width="700" alt="Job listing page with search and filters">
+
+**Candidate DashBoard**
+<img src="frontend/public/screenshots/candidate.png" width="700" alt="Single job detail view">
+
+**Recruiter Applicant Dashboard**
+<img src="frontend/public/screenshots/recruiterPage.png" width="700" alt="Recruiter view of applicants for a job">
+
+**Admin Dashboard (charts)**
+<img src="frontend/public/screenshots/adminDashboard.png" width="700" alt="Admin dashboard with growth and application charts">
+
+**Light Mode**
+<img src="frontend/public/screenshots/dark.png" width="700" alt="Application in dark theme">
+
+**Application**
+<img src="frontend/public/screenshots/myapplication.png" width="700" alt="Application in dark theme">
 
 ## Known Limitations
 
