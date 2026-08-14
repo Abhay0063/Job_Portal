@@ -241,10 +241,44 @@ Backend `.env` (see `backend/.env.example`):
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_DIALECT` | MySQL connection |
 | `JWT_SECRET` | Signs auth tokens — use a long random string, never commit a real one |
 | `JWT_EXPIRES_IN` | Token lifetime (default `7d`) |
+| `DB_SSL_REJECT_UNAUTHORIZED` | Set to `false` to connect to the hosted MySQL instance (Aiven) without validating its SSL certificate. **Disables certificate validation, not encryption** — see [Known Limitations](#known-limitations). |
 
 ## Deployment
 
-*To be completed — see project board / next steps.*
+**Stack:** Frontend on Vercel, backend on Render, database on Aiven (MySQL).
+
+### 1. Database (Aiven)
+1. Create a MySQL service on Aiven and wait for it to reach `Running` state.
+2. From the service overview page, copy the connection details: host, port, user, password, and database name.
+3. Download the service's CA certificate (**Overview → CA certificate → Download**). Aiven's MySQL requires SSL — connections without a valid CA will be rejected outright, so this file is mandatory, not optional.
+4. In `backend/config/database.js`, load the CA and connect with `ssl: { ca: <cert contents>, rejectUnauthorized: true }` rather than `DB_SSL_REJECT_UNAUTHORIZED=false`. See [Known Limitations](#known-limitations) for why the bypass flag currently in use should be temporary.
+
+### 2. Backend (Render)
+1. Push `backend/` to a Git repo Render can access (root directory: `backend` if it's a subfolder of a monorepo).
+2. Create a new **Web Service** on Render, connect the repo, set:
+   - Build command: `npm install`
+   - Start command: `npm start` (or `node backend/server.js`, matching your `package.json`)
+3. Add all variables from [Environment Variables](#environment-variables) in Render's dashboard (**Environment** tab) — including the Aiven `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and a real `JWT_SECRET`. Do not commit these values to the repo.
+4. On first deploy, run the table sync and admin seed once, either via Render's **Shell** tab or a one-off job:
+   ```bash
+   npm run sync
+   npm run seed:admin
+   ```
+   Do not run `sync` on every deploy — it's a one-time/schema-change step, not part of the normal start command.
+5. Note the deployed backend URL (e.g. `https://job-portal-backend.onrender.com`) — the frontend needs it next.
+6. Render's free tier spins down on inactivity; the first request after idle can take 30–60s to respond. Mention this if demoing live.
+
+### 3. Frontend (Vercel)
+1. Push `frontend/` to a Git repo, import it into Vercel, set root directory to `frontend` if needed.
+2. Set the API base URL as a Vercel environment variable (e.g. `VITE_API_URL=https://job-portal-backend.onrender.com/api`) and update `frontend/src/api/axios.js` to read it via `import.meta.env.VITE_API_URL` instead of a hardcoded `localhost:5000`.
+3. Deploy. Vercel auto-builds on push once connected.
+4. On Render, add the deployed Vercel URL to the backend's CORS allow-list so cross-origin requests aren't rejected.
+
+### Post-deploy checklist
+- [ ] Hit `https://<render-url>/api/health` to confirm the backend is up and can reach Aiven.
+- [ ] Log in as the seeded admin from the live frontend to confirm the full round trip (frontend → Render → Aiven) works.
+- [ ] Confirm resume uploads still work — Render's disk is ephemeral, so uploaded files will not survive a redeploy or restart (already noted under Known Limitations).
+- [ ] Replace `DB_SSL_REJECT_UNAUTHORIZED=false` with the Aiven CA cert before treating this as more than a demo deployment.
 
 ## Screenshots
 
@@ -256,3 +290,4 @@ Backend `.env` (see `backend/.env.example`):
 - **Notifications use polling** (every 30s), not WebSockets — sufficient for this scope, not real-time in the strictest sense.
 - **DOC/DOCX resumes** can't be previewed inline in the browser (no native renderer) — they fall back to a download link; only PDF previews inline.
 - The seeded admin password is visible in `seedAdmin.js` in plain text — fine for a local/demo environment, not a real production practice.
+- **`DB_SSL_REJECT_UNAUTHORIZED=false` disables MySQL certificate validation** when connecting to the hosted database (Aiven). The connection is still encrypted, but the app will accept a certificate from any server, not just the real one — this makes the connection vulnerable to a man-in-the-middle attack in principle. It was set for expediency during initial deployment. The proper fix is to load Aiven's provided CA certificate and connect with `rejectUnauthorized: true`; this should be done before the project is treated as anything beyond a graded/demo deployment.
