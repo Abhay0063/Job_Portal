@@ -301,22 +301,22 @@ Backend `.env` (see `backend/.env.example`):
 > Images live in `frontend/public/screenshots/`. Commit the PNGs with the exact filenames below and these will render automatically — no further README edits needed.
 
 **Job Listing**
-<img src="frontend/public/screenshots/jobs.png" width="700" alt="Job listing page with search and filters">
+<img src="frontend/public/screenshots/jobs.png"  alt="Job listing page with search and filters">
 
 **Candidate DashBoard**
-<img src="frontend/public/screenshots/candidate.png" width="700" alt="Single job detail view">
+<img src="frontend/public/screenshots/candidate.png"  alt="Single job detail view">
 
 **Recruiter Applicant Dashboard**
-<img src="frontend/public/screenshots/recruiterPage.png" width="700" alt="Recruiter view of applicants for a job">
+<img src="frontend/public/screenshots/recruiterPage.png"  alt="Recruiter view of applicants for a job">
 
 **Admin Dashboard (charts)**
-<img src="frontend/public/screenshots/adminDashboard.png" width="700" alt="Admin dashboard with growth and application charts">
+<img src="frontend/public/screenshots/adminDashboard.png"  alt="Admin dashboard with growth and application charts">
 
 **Light Mode**
-<img src="frontend/public/screenshots/dark.png" width="700" alt="Application in dark theme">
+<img src="frontend/public/screenshots/dark.png"  alt="Application in dark theme">
 
 **Application**
-<img src="frontend/public/screenshots/myapplication.png" width="700" alt="Application in dark theme">
+<img src="frontend/public/screenshots/myapplication.png"  alt="Application in dark theme">
 
 ## Known Limitations
 
