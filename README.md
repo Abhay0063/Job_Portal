@@ -2,7 +2,6 @@
 
 **🔗 Live Demo:** [job-portal-nine-tau.vercel.app](https://job-portal-nine-tau.vercel.app) &nbsp;|&nbsp; **⚙️ API Base:** `https://job-portal-rabw.onrender.com` &nbsp;|&nbsp; **📦 Repo:** `https://github.com/Abhay0063/Job_Portal` 
 
-![Frontend](https://img.shields.io/badge/frontend-Vercel-black) ![Backend](https://img.shields.io/badge/backend-Render-46E3B7) ![Database](https://img.shields.io/badge/database-Aiven%20MySQL-00B9FF) 
 
 A full-stack recruitment platform connecting recruiters and candidates, with role-based dashboards, application tracking, interview scheduling, and an admin console for platform oversight.
 
