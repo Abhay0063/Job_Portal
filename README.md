@@ -281,8 +281,18 @@ Backend `.env` (see `backend/.env.example`):
 - [ ] Replace `DB_SSL_REJECT_UNAUTHORIZED=false` with the Aiven CA cert before treating this as more than a demo deployment.
 
 ## Screenshots
-
-*Add screenshots here before submitting: job listing, job detail, recruiter applicant dashboard, admin dashboard with charts, dark mode.*
+1. Job DashBoard
+   ![Job DashBoard](frontend/public/screenshots/jobs.png)
+2. Admin DashBoard
+   ![Admin DashBoard](frontend/public/screenshots/adminDashboard.png)
+3. Recruiter
+   ![Recruiter DashBoard](frontend/public/screenshots/recruiterPage.png)
+4. Candidate
+   ![Candidate DashBoard](frontend/public/screenshots/candidate.png)
+5. Candidate - My Application
+   ![My Application](frontend/public/screenshots/myapplication.png)
+6. Light Theme
+   ![Theme](frontend/public/screenshots/dark.png)
 
 ## Known Limitations
 
